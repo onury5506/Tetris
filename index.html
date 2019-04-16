@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    <script>
+        window.addEventListener("load",function(){
+            
+            var soundRotate = document.getElementById("soundRotate")
+            var soundLineDrop = document.getElementById("soundLineDrop")
+            var soundLineRemove = document.getElementById("soundLineRemove")
+            var soundGameOver = document.getElementById("soundGameOver")
+            var music = document.getElementById("music")
+            
+            function maxBoxSize(width, height) {
+                var boxSize = 1
+                width -= width*15/100
+                height -= height*15/100
+                while(boxSize*10 <= width && boxSize*20 <= height)
+                    boxSize++;
+                return --boxSize;
+            };
+            var scoreLabel = document.getElementById("score")
+            var score = 0
+            scoreLabel.innerHTML = "Score : 0"
+            var boxSize = maxBoxSize(window.innerWidth,window.innerHeight)
+            var blockList = []
+            var board = document.getElementById("game")
+            board.style.width = boxSize*10+"px"
+            board.style.height = boxSize*20+"px"
+            board.style.left = window.innerWidth/2-boxSize*5+"px"
+            var run = true;
+            var gameover = document.getElementById("gameover")
+            gameover.style.visibility = "hidden"
+            function randomShape(){
+                var s = Math.floor(Math.random() * 7)+0;
+                if(s == 0){// I
+                    return [[-2,0],[-1,0],[0,0],[1,0],[0,-1],"cyan"]
+                }else if(s == 1){//z
+                    return [[-1,1],[0,1],[0,0],[1,0],[0,0],"red"]
+                }else if(s == 2){//s
+                    return [[-1,0],[0,0],[0,1],[1,1],[0,0],"green"]
+                }else if(s == 3){//o
+                    return [[0,0],[1,0],[0,1],[1,1],[-99,0],"yellow"]
+                }else if(s == 4){//t
+                    return [[0,0],[-1,0],[1,0],[0,-1],[0,0],"purple"]
+                }else if(s == 5){//l
+                    return [[0,0],[-1,0],[1,0],[1,-1],[0,0],"orange"]
+                }else if(s == 6){//j
+                    return [[0,0],[-1,0],[1,0],[-1,-1],[0,0],"blue"]
+                }else if(s == 7){//u
+                    return [[0,0],[-1,0],[1,0],[-1,-1],[1,-1],[0,0],"gray"]
+                }else if(s == 8){//b
+                    return [[0,0],[-1,0],[-2,0],[1,0],[1,-1],[0,-1],[0,0],"darkcyan"]
+                }
+                
+            }
+            function createShape(){
+                var myshape = randomShape()
+                var blocks = []
+                var miny=0;
+                var rPoint = myshape[myshape.length-2];
+                var lastPos = []
+                for(var i=0;i<myshape.length-2;i++){
+                    if(miny > myshape[i][1])
+                        miny = myshape[i][1]
+                }
+                miny *= -1;
+                var x = 4*boxSize;
+                var y = miny*boxSize;
+                for(var i=0;i<myshape.length-2;i++){
+                    block = document.createElement("div")
+                    block.className = "block"
+                    block.style.width = boxSize+"px"
+                    block.style.height = boxSize+"px"
+                    block.style.backgroundColor = myshape[myshape.length-1]
+                    //if(myshape[i][0]==0 && myshape[i][1] == 0)block.style.backgroundColor = "black"
+                    block.style.left = x+myshape[i][0]*boxSize+"px"
+                    block.style.top = y+myshape[i][1]*boxSize+"px"
+                    blocks.push(block)
+                    board.appendChild(block)
+                }
+                return {
+                    rotate: function(){
+                        if(rPoint[0]==-99)
+                            return 0
+                        lastPos = []
+                        for(var i=0;i<myshape.length-2;i++){
+                            lastPos.push([myshape[i][0],myshape[i][1]])
+                            var temp = myshape[i][0]-rPoint[0]
+                            myshape[i][0] = (myshape[i][1]-rPoint[1])*(-1)
+                            myshape[i][1] = temp
+                            blocks[i].style.left = x+myshape[i][0]*boxSize+"px"
+                            blocks[i].style.top = y+myshape[i][1]*boxSize+"px"
+                            //console.log(i+" old : "+lastPos[lastPos.length-1][0]+"x"+lastPos[lastPos.length-1][1]+" | new : "+myshape[i][0]+"x"+myshape[i][1])
+                        }
+                    },
+                    rerotate: function(){
+                        if(rPoint[0]==-99)
+                            return 0
+                        for(var i=0;i<myshape.length-2;i++){
+                            /*var temp = myshape[i][0]-rPoint[0]
+                            myshape[i][0] = myshape[i][1]-rPoint[1]
+                            myshape[i][1] = temp*(-1)
+                            blocks[i].style.left = x+myshape[i][0]*boxSize+"px"
+                            blocks[i].style.top = y+myshape[i][1]*boxSize+"px"*/
+                            cord = lastPos.shift()
+                            myshape[i][0] = cord[0]
+                            myshape[i][1] = cord[1]
+                            blocks[i].style.left = x+myshape[i][0]*boxSize+"px"
+                            blocks[i].style.top = y+myshape[i][1]*boxSize+"px"
+                            //console.log(i+" old : "+cord[0]+"-"+cord[1]+" | new : "+blocks[i].style.left+"-"+blocks[i].style.top)
+                        }
+                    },
+                    move(xm,ym){
+                        x += xm*boxSize
+                        y += ym*boxSize
+                        for(var i=0;i<myshape.length-2;i++){
+                            blocks[i].style.left = x+myshape[i][0]*boxSize+"px"
+                            blocks[i].style.top = y+myshape[i][1]*boxSize+"px"
+                        }
+                    },
+                    getBlocks : function(){
+                        return blocks
+                    },
+                    remove : function(n){
+                        board.removeChild(blocks[n])
+                        blocks.splice(n,1)
+                    }
+                    
+                }
+                
+            }
+            blockList.push(createShape())
+            var gameClock = 0;
+            var left=false,right=false,up=false,down=false,r=false
+            function game(){//main game loop
+                gameClock++;
+                music.play()
+                if(gameClock==8 || down){
+                    soundLineDrop.currentTime = 0
+                    soundLineDrop.play()
+                    gameClock = 0
+                    blockList[blockList.length-1].move(0,1)
+                    
+                    blocks = blockList[blockList.length-1].getBlocks()
+                    newBlock = false;
+                    for(var i=0;i<blocks.length;i++){ 
+                        if(parseInt(blocks[i].style.top) == boxSize*20){
+                            newBlock = true
+                            break
+                        }
+                    }
+                    
+                    if(collision()){
+                        newBlock = true;
+                    }
+                    
+                    if(newBlock){
+                        blockList[blockList.length-1].move(0,-1)
+                        checkBroke()
+                        blockList.push(createShape())
+                        run = !collision()
+                    }
+                    
+                }
+                
+                function checkBroke(){
+                    var lists = []
+                    for(var i=0;i<20;i++)
+                        lists.push([])
+                    for(var i=0;i<blockList.length;i++){
+                        blocks = blockList[i].getBlocks()
+                        for(var j=0;j<blocks.length;j++){
+                            var y = parseInt(blocks[j].style.top)/boxSize
+                            //console.log(y)
+                            lists[y].push(blockList[i])
+                        }
+                    }
+                    
+                    for(var i=0;i<20;i++){
+                        if(lists[i].length==10){
+                            soundLineRemove.play()
+                            for(var j=0;j<10;j++){
+                                b = lists[i][j];
+                                blocks = b.getBlocks()
+                                for(var n=0;n<blocks.length;n++){
+                                    var y = parseInt(blocks[n].style.top)/boxSize
+                                    if(y==i){
+                                        b.remove(n)
+                                        score++
+                                        break
+                                    }
+                                }
+                            }
+                            scoreLabel.innerHTML = "Score : "+score
+                            /*for(t=i-1;t>=0;t--){
+                                for(k=0;k<lists[t].length;k++){
+                                    b = lists[t][k];
+                                    blocks = b.getBlocks()
+                                    for(var l=0;l<blocks.length;l++){
+                                        var y = parseInt(blocks[l].style.top)/boxSize
+                                        if(y==t){
+                                            blocks[l].style.top = parseInt(blocks[l].style.top)+boxSize+"px"
+                                        }
+                                    }
+                                }
+                            }*/
+                            for(var t=0;t<blockList.length;t++){
+                                var b = blockList[t]
+                                var blocks = b.getBlocks()
+                                for(var k=0;k<blocks.length;k++){
+                                    if(parseInt(blocks[k].style.top)<i*boxSize){
+                                        blocks[k].style.top = parseInt(blocks[k].style.top)+boxSize+"px"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                function collision(){
+                    blocks = blockList[blockList.length-1].getBlocks()
+                    for(var i=0;i<blocks.length;i++)
+                    for(var otherBlocks = 0;otherBlocks<blockList.length-1;otherBlocks++){
+                        bs = blockList[otherBlocks].getBlocks()
+                        for(var b=0;b<bs.length;b++){
+                            if(parseInt(blocks[i].style.top) == parseInt(bs[b].style.top)
+                                && parseInt(blocks[i].style.left) == parseInt(bs[b].style.left)){
+                                return true
+                            }
+                        }
+                    }
+                    return false
+                }
+                
+                if(up){
+                    up=false;
+                    blocks = blockList[blockList.length-1].getBlocks()
+                    blockList[blockList.length-1].rotate()
+                    var cancel = collision()
+                    for(var i=0;i<blocks.length && !cancel;i++){
+                        if(parseInt(blocks[i].style.left)<0 || parseInt(blocks[i].style.left)+boxSize>10*boxSize || parseInt(blocks[i].style.top)<0 ||parseInt(blocks[i].style.top)+boxSize>20*boxSize){
+                            cancel=true
+                        }
+                    }
+                    if(cancel){
+                        blockList[blockList.length-1].rerotate()
+                    }else{
+                        soundRotate.play()
+                    }
+                }
+                
+                if(r){
+                    r=false
+                    blockList[blockList.length-1].rerotate()
+                }
+                
+                if(left){
+                    blockList[blockList.length-1].move(-1,0)
+                    var cancel = collision()
+                    blocks = blockList[blockList.length-1].getBlocks()
+                    for(var i=0;i<blocks.length && !cancel;i++){
+                        if(parseInt(blocks[i].style.left)<0){
+                            cancel=true
+                        }
+                    }
+                    
+                    if(cancel){
+                        blockList[blockList.length-1].move(1,0)
+                    }
+                }
+                    
+                if(right){
+                    blockList[blockList.length-1].move(1,0)
+                    var cancel = collision()
+                    blocks = blockList[blockList.length-1].getBlocks()
+                    for(var i=0;i<blocks.length && !cancel;i++){
+                        if(parseInt(blocks[i].style.left)+boxSize>10*boxSize){
+                            cancel=true
+                        }
+                    }
+                    if(cancel){
+                        blockList[blockList.length-1].move(-1,0)
+                    }
+                }
+                
+                
+                if(run)
+                    setTimeout(game,100)
+                else{
+                    music.pause()
+                    soundGameOver.play()
+                    gameover.style.visibility = "visible"
+                }
+            }
+            game()
+            
+            window.addEventListener("keydown",function(key){
+                
+                if(key.code == "ArrowLeft")
+                    left=true
+                else if(key.code == "ArrowRight")
+                    right=true
+                else if(key.code == "ArrowUp")
+                    up=true
+                else if(key.code == "ArrowDown")
+                    down=true
+                else if(key.code == "KeyR")
+                    r=true
+            })
+            
+            window.addEventListener("keyup",function(key){
+                if(key.code == "ArrowLeft")
+                    left=false
+                else if(key.code == "ArrowRight")
+                    right=false
+                else if(key.code == "ArrowUp")
+                    up=false
+                else if(key.code == "ArrowDown")
+                    down=false
+            })
+            
+            
+        })
+    </script>
+    
+    <style>
+        body{
+            text-align: center;
+        }
+        #game{
+            border: 1px solid black;
+            position: relative;
+            background-color: cornsilk;
+        }
+        #gameover{
+            font-size : 24px;
+            z-index: 2;
+            position: absolute;
+            top: 45%;
+            left: 20%;
+            background-color: antiquewhite;
+            
+        }
+        .block{
+            position: absolute;
+            z-index: 1;
+        }
+        #score{
+            font-size: 30px;
+        }
+    </style>
+    
+</head>
+<body>
+    <div id="game">
+        <span id="gameover">Game Over</span>
+    </div>
+    <span id="score"></span>
+    <audio id="soundRotate">
+        <source src="sounds/rotate.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="soundLineDrop">
+        <source src="sounds/line-drop.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="soundLineRemove">
+        <source src="sounds/line-remove.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="soundGameOver">
+        <source src="sounds/gameover.mp3" type="audio/mpeg">
+    </audio>
+    
+    <audio id="music" loop>
+        <source src="sounds/music.mp3" type="audio/mpeg">
+    </audio>
+</body>
+</html>
