@@ -24,6 +24,8 @@
             var score = 0
             scoreLabel.innerHTML = "Score : 0"
             var boxSize = maxBoxSize(window.innerWidth,window.innerHeight)
+            
+            
             var blockList = []
             var board = document.getElementById("game")
             board.style.width = boxSize*10+"px"
@@ -48,90 +50,82 @@
                     return [[0,0],[-1,0],[1,0],[1,-1],[0,0],"orange"]
                 }else if(s == 6){//j
                     return [[0,0],[-1,0],[1,0],[-1,-1],[0,0],"blue"]
-                }else if(s == 7){//u
-                    return [[0,0],[-1,0],[1,0],[-1,-1],[1,-1],[0,0],"gray"]
-                }else if(s == 8){//b
-                    return [[0,0],[-1,0],[-2,0],[1,0],[1,-1],[0,-1],[0,0],"darkcyan"]
                 }
                 
             }
             function createShape(){
-                var myshape = randomShape()
-                var blocks = []
-                var miny=0;
-                var rPoint = myshape[myshape.length-2];
-                var lastPos = []
-                for(var i=0;i<myshape.length-2;i++){
-                    if(miny > myshape[i][1])
-                        miny = myshape[i][1]
+                this.myshape = randomShape()
+                this.blocks = []
+                this.miny=0;
+                this.rPoint = this.myshape[this.myshape.length-2];
+                this.lastPos = []
+                for(var i=0;i<this.myshape.length-2;i++){
+                    if(this.miny > this.myshape[i][1])
+                        this.miny = this.myshape[i][1]
                 }
-                miny *= -1;
-                var x = 4*boxSize;
-                var y = miny*boxSize;
-                for(var i=0;i<myshape.length-2;i++){
+                this.miny *= -1;
+                this.x = 4*boxSize;
+                this.y = this.miny*boxSize;
+                for(var i=0;i<this.myshape.length-2;i++){
                     block = document.createElement("div")
                     block.className = "block"
                     block.style.width = boxSize+"px"
                     block.style.height = boxSize+"px"
-                    block.style.backgroundColor = myshape[myshape.length-1]
-                    //if(myshape[i][0]==0 && myshape[i][1] == 0)block.style.backgroundColor = "black"
-                    block.style.left = x+myshape[i][0]*boxSize+"px"
-                    block.style.top = y+myshape[i][1]*boxSize+"px"
-                    blocks.push(block)
+                    block.style.backgroundColor = this.myshape[this.myshape.length-1]
+                    //if(this.myshape[i][0]==0 && this.myshape[i][1] == 0)block.style.backgroundColor = "black"
+                    block.style.left = this.x+this.myshape[i][0]*boxSize+"px"
+                    block.style.top = this.y+this.myshape[i][1]*boxSize+"px"
+                    this.blocks.push(block)
                     board.appendChild(block)
                 }
-                return {
-                    rotate: function(){
-                        if(rPoint[0]==-99)
-                            return 0
-                        lastPos = []
-                        for(var i=0;i<myshape.length-2;i++){
-                            lastPos.push([myshape[i][0],myshape[i][1]])
-                            var temp = myshape[i][0]-rPoint[0]
-                            myshape[i][0] = (myshape[i][1]-rPoint[1])*(-1)
-                            myshape[i][1] = temp
-                            blocks[i].style.left = x+myshape[i][0]*boxSize+"px"
-                            blocks[i].style.top = y+myshape[i][1]*boxSize+"px"
-                            //console.log(i+" old : "+lastPos[lastPos.length-1][0]+"x"+lastPos[lastPos.length-1][1]+" | new : "+myshape[i][0]+"x"+myshape[i][1])
-                        }
-                    },
-                    rerotate: function(){
-                        if(rPoint[0]==-99)
-                            return 0
-                        for(var i=0;i<myshape.length-2;i++){
-                            /*var temp = myshape[i][0]-rPoint[0]
-                            myshape[i][0] = myshape[i][1]-rPoint[1]
-                            myshape[i][1] = temp*(-1)
-                            blocks[i].style.left = x+myshape[i][0]*boxSize+"px"
-                            blocks[i].style.top = y+myshape[i][1]*boxSize+"px"*/
-                            cord = lastPos.shift()
-                            myshape[i][0] = cord[0]
-                            myshape[i][1] = cord[1]
-                            blocks[i].style.left = x+myshape[i][0]*boxSize+"px"
-                            blocks[i].style.top = y+myshape[i][1]*boxSize+"px"
-                            //console.log(i+" old : "+cord[0]+"-"+cord[1]+" | new : "+blocks[i].style.left+"-"+blocks[i].style.top)
-                        }
-                    },
-                    move(xm,ym){
-                        x += xm*boxSize
-                        y += ym*boxSize
-                        for(var i=0;i<myshape.length-2;i++){
-                            blocks[i].style.left = x+myshape[i][0]*boxSize+"px"
-                            blocks[i].style.top = y+myshape[i][1]*boxSize+"px"
-                        }
-                    },
-                    getBlocks : function(){
-                        return blocks
-                    },
-                    remove : function(n){
-                        board.removeChild(blocks[n])
-                        blocks.splice(n,1)
-                    }
-                    
-                }
-                
             }
-            blockList.push(createShape())
+            createShape.prototype.rotate = function(){
+                                                if(this.rPoint[0]==-99)
+                                                    return 0
+                                                this.lastPos = []
+                                                for(var i=0;i<this.myshape.length-2;i++){
+                                                    this.lastPos.push([this.myshape[i][0],this.myshape[i][1]])
+                                                    var temp = this.myshape[i][0]-this.rPoint[0]
+                                                    this.myshape[i][0] = (this.myshape[i][1]-this.rPoint[1])*(-1)
+                                                    this.myshape[i][1] = temp
+                                                    this.blocks[i].style.left = this.x+this.myshape[i][0]*boxSize+"px"
+                                                    this.blocks[i].style.top = this.y+this.myshape[i][1]*boxSize+"px"
+                                                    //console.log(i+" old : "+this.lastPos[this.lastPos.length-1][0]+"x"+this.lastPos[this.lastPos.length-1][1]+" | new : "+this.myshape[i][0]+"x"+this.myshape[i][1])
+                                                }
+                                            }
+            createShape.prototype.rerotate = function(){
+                                                if(this.rPoint[0]==-99)
+                                                    return 0
+                                                for(var i=0;i<this.myshape.length-2;i++){
+                                                    /*var temp = this.myshape[i][0]-this.rPoint[0]
+                                                    this.myshape[i][0] = this.myshape[i][1]-this.rPoint[1]
+                                                    this.myshape[i][1] = temp*(-1)
+                                                    this.blocks[i].style.left = x+this.myshape[i][0]*boxSize+"px"
+                                                    this.blocks[i].style.top = y+this.myshape[i][1]*boxSize+"px"*/
+                                                    cord = this.lastPos.shift()
+                                                    this.myshape[i][0] = cord[0]
+                                                    this.myshape[i][1] = cord[1]
+                                                    this.blocks[i].style.left = this.x+this.myshape[i][0]*boxSize+"px"
+                                                    this.blocks[i].style.top = this.y+this.myshape[i][1]*boxSize+"px"
+                                                    //console.log(i+" old : "+cord[0]+"-"+cord[1]+" | new : "+this.blocks[i].style.left+"-"+this.blocks[i].style.top)
+                                                }
+                                            }
+            createShape.prototype.move = function (xm,ym){
+                                            this.x += xm*boxSize
+                                            this.y += ym*boxSize
+                                            for(var i=0;i<this.myshape.length-2;i++){
+                                                this.blocks[i].style.left = this.x+this.myshape[i][0]*boxSize+"px"
+                                                this.blocks[i].style.top = this.y+this.myshape[i][1]*boxSize+"px"
+                                            }
+                                         }
+            createShape.prototype.getBlocks = function(){
+                                                return this.blocks
+                                              }
+            createShape.prototype.remove = function(n){
+                                                board.removeChild(this.blocks[n])
+                                                this.blocks.splice(n,1)
+                                            }
+            blockList.push(new createShape())
             var gameClock = 0;
             var left=false,right=false,up=false,down=false,r=false
             function game(){//main game loop
@@ -159,7 +153,7 @@
                     if(newBlock){
                         blockList[blockList.length-1].move(0,-1)
                         checkBroke()
-                        blockList.push(createShape())
+                        blockList.push(new createShape())
                         run = !collision()
                     }
                     
